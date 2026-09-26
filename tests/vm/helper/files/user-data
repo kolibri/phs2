@@ -1,0 +1,8 @@
+#cloud-config
+disable_root: false
+
+users:
+  - name: root
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOZKb/LhLhUmeV81iH6aONN/xFzN9/AUCPcsM9BG+zZm
+
