@@ -9,5 +9,6 @@ wheels/
 # Virtual environments
 .venv
 .qemu/
+!.qemu/.gitignore
 .idea/
 archlinux-x86_64.iso
