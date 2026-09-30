@@ -31,7 +31,7 @@ client = QemuVm(
         disks=(
             DiskConfig(
                 path=Path(".qemu/test-client.qcow2"),
-                size_gb=20,
+                size_gb=60,
             ),
         ),
         networks=(network_client,),
@@ -49,4 +49,9 @@ client = QemuVm(
 cloudimage = CloudImage(path=Path().cwd() / ".qemu/cloudimage.iso")
 cloudimage.create(True)
 
-client.boot(Path().cwd() / "archlinux-x86_64.iso", cloudimage.path, gui=True)
+client.boot(
+    Path().cwd() / "archlinux-x86_64.iso",
+    cloudimage.path,
+    gui=True,
+    recreate_disks=True,
+)

@@ -1,0 +1,17 @@
+recipes:
+  default:
+    - package: [vi, nano]
+
+  zsh:
+    - package: [zsh]
+
+    - repo:
+        url: https://github.com/ohmyzsh/ohmyzsh.git
+        dest: "$home$/oh-my-zsh"
+
+    - file:
+        src: files/zshrc
+        dest: "$home$/.zshrc"
+
+  git:
+    - package: [git]

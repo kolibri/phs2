@@ -1,14 +1,9 @@
-from pathlib import Path
 import logging
+from pathlib import Path
+
 from cyclopts import App
-from pyinfra.api import Inventory, Config, State
-from pyinfra.api.connect import connect_all, disconnect_all
-from pyinfra.api.operation import add_op
-from pyinfra.api.operations import run_ops
-from pyinfra.operations import server
 
-from phs.inventory.host import Host
-
+from phs.inventory.config import create_configuration_loader
 
 logging.basicConfig(level=logging.INFO)
 
@@ -17,7 +12,14 @@ app = App()
 
 @app.command
 def install(hostname: str):
-    host = Host('test', '127.0.0.1', 2202)
+    loader = create_configuration_loader()
+
+    configuration = loader.load(Path("tests/hostconfig"))
+
+    print(configuration)
+
+    """
+    host = HostConfig('test', '127.0.0.1', 2202)
 
     inventory = Inventory((["127.0.0.1"], {
         "ssh_user": "root",
@@ -40,11 +42,19 @@ def install(hostname: str):
             commands=['echo "hello world"'],
         )
 
+        add_op(
+            state,
+            pacman,
+            name="say hello",
+            commands=['echo "hello world"'],
+        )
+
         run_ops(state)
     finally:
         disconnect_all(state)
 
     print(f"Provisioning {hostname}")
+    """
 
 
 if __name__ == "__main__":

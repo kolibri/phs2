@@ -298,22 +298,23 @@ class QemuVm:
 
         command = self._build_command(BootMedia(tuple(iso_images)), gui)
         log_file = self.config.log_file()
-        log = open(log_file, "ab")
+        # log = open(log_file, "ab")
 
-        try:
-            self._process = subprocess.Popen(
-                command,
-                stdin=subprocess.DEVNULL,
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                start_new_session=True,
-            )
-        except Exception:
-            log.close()
-            raise
+        with open(log_file, "ab") as log:
+            try:
+                self._process = subprocess.Popen(
+                    command,
+                    stdin=subprocess.DEVNULL,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                )
+            except Exception:
+                log.close()
+                raise
 
-        self.config.pid_file().write_text(str(self._process.pid))
-        self._wait_for_qmp()
+            self.config.pid_file().write_text(str(self._process.pid))
+            self._wait_for_qmp()
 
     def shutdown(
         self,
