@@ -9,10 +9,14 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 # ============================================================================
 # Value objects
 # ============================================================================
+
+
+DiskInterface = Literal["virtio", "ide", "scsi", "nvme"]
 
 
 @dataclass(frozen=True)
@@ -20,7 +24,7 @@ class DiskConfig:
     path: Path
     size_gb: int
     format: str = "qcow2"
-    interface: str = "virtio"
+    interface: DiskInterface = "nvme"
 
     def create(self, recreate: bool = False) -> None:
         if self.path.exists():
@@ -42,10 +46,18 @@ class DiskConfig:
             check=True,
         )
 
-    def qemu_args(self) -> list[str]:
+    def qemu_args(self, disk_id: str = "disk0") -> list[str]:
+        if self.interface == "nvme":
+            return [
+                "-drive",
+                (f"if=none,id={disk_id},format={self.format},file={self.path}"),
+                "-device",
+                f"nvme,drive={disk_id},serial={disk_id}",
+            ]
+
         return [
             "-drive",
-            f"file={self.path},format={self.format},if={self.interface}",
+            (f"file={self.path},format={self.format},if={self.interface}"),
         ]
 
 
@@ -402,8 +414,8 @@ class QemuVm:
                 "mon:stdio",
             ]
 
-        for disk in self.config.disks:
-            args.extend(disk.qemu_args())
+        for index, disk in enumerate(self.config.disks):
+            args.extend(disk.qemu_args(f"disk{index}"))
         for network in self.config.networks:
             args.extend(network.qemu_args())
         args.extend(boot_media.qemu_args())

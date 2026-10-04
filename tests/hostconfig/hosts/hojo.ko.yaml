@@ -1,42 +1,42 @@
-"hojo.ko":
-  config:
-    ssh:
-      user: ko
-      port: 2202
+host:
+  hostname: hojo.ko
+  username: ko
+  home: "/home/{{ host.username }}"
+  connection:
+    host: 127.0.0.1
+    port: 2202
+  microcode:
+    package: intel-ucode
+    initrd: /intel-ucode.img
+  base_packages: [ uv ]
+  disks:
+    - device: /dev/nvme0n1
+      table: gpt
+      partitions:
+        - name: efi
+          size: 1G
+          filesystem: fat32
+          mount: /boot/efi
 
-    discs:
-      - device: /dev/mmcblk0
-        table: gpt
-        partitions:
-          - name: efi
-            size: 1G
-            filesystem: fat32
-            mount: /boot/efi
+        - name: swap
+          size: 16G
+          type: swap
 
-          - name: swap
-            size: 16G
-            type: swap
-
-          - name: root
-            size: remaining
-            filesystem: ext4
-            mount: /
+        - name: root
+          size: remaining
+          filesystem: ext4
+          mount: /
 
   recipes:
-    - default: {}
-    - git: {}
-    - zsh: {}
-
+    - default: ~
+    - git: ~
+    - zsh: ~
     - hyprland:
-        hyprland_config_dir: files/hyprland/{hostname}
-
-    - zsh:
-        foo: bar
+        hyprland_config_dir: "files/hyprland/{{ host.hostname }}"
+    - hojo: ~
 
 recipes:
-  hyprland:
-    - package: [hyprland, "{extra_packages}"]
-
-    - dir:
-        src: "{hyprland_config_dir}"
-        dest: "$home$/.config/hyprland"
+  hojo:
+    tasks:
+      - package:
+          name: [ firefox, obsidian ]

@@ -9,12 +9,14 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "cyclopts>=4.25.3",
-    "pyinfra>=3.10.0",
+    "fabric>=3.2.3",
+    "jinja2>=3.1.6",
+    "pydantic>=2.13.5",
     "pyyaml>=6.0.3",
 ]
 
 [project.scripts]
-phs = "phs.cli:app"
+phs = "phs.cli:run"
 
 [build-system]
 requires = ["uv_build>=0.11.29,<0.12.0"]

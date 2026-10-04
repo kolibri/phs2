@@ -1,61 +1,67 @@
 import logging
-from pathlib import Path
+from dataclasses import replace
+from typing import Annotated
 
-from cyclopts import App
+from cyclopts import App, Parameter
+from rich.console import Console
 
-from phs.inventory.config import create_configuration_loader
+from phs.commands.install import install
+from phs.commands.test import test
+from phs.context import AppContext
+from phs.output import RichOutput
+from phs.settings import Settings
 
-logging.basicConfig(level=logging.INFO)
+console = Console()
+_DEFAULT_SETTINGS = Settings()
+app = App(
+    console=console,
+)
 
-app = App()
+app.command(install)
+app.command(test)
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 
-@app.command
-def install(hostname: str):
-    loader = create_configuration_loader()
+@app.meta.default
+def main(
+    *tokens: Annotated[
+        str,
+        Parameter(show=False, allow_leading_hyphen=True),
+    ],
+    settings: Settings = _DEFAULT_SETTINGS,
+):
+    settings = replace(
+        settings,
+        config_dir=settings.config_dir.expanduser(),
+        sshkey=settings.sshkey.expanduser(),
+    )
 
-    configuration = loader.load(Path("tests/hostconfig"))
+    context = AppContext(
+        output=RichOutput(console),
+        settings=settings,
+    )
 
-    print(configuration)
+    command, bound, ignored = app.parse_args(tokens)
 
-    """
-    host = HostConfig('test', '127.0.0.1', 2202)
+    additional_kwargs: dict[str, object] = {}
 
-    inventory = Inventory((["127.0.0.1"], {
-        "ssh_user": "root",
-        "ssh_port": 2202,
-        "ssh_key": str(Path.cwd() / "tests/vm/helper/files/id_ed25519"),
-
-    }))
-    
-    config = Config()
-
-    state = State(inventory, config)
+    if "context" in ignored:
+        additional_kwargs["context"] = context
 
     try:
-        connect_all(state)
-
-        add_op(
-            state,
-            server.shell,
-            name="say hello",
-            commands=['echo "hello world"'],
+        return command(
+            *bound.args,
+            **bound.kwargs,
+            **additional_kwargs,
         )
-
-        add_op(
-            state,
-            pacman,
-            name="say hello",
-            commands=['echo "hello world"'],
-        )
-
-        run_ops(state)
-    finally:
-        disconnect_all(state)
-
-    print(f"Provisioning {hostname}")
-    """
+    except TypeError as error:
+        context.output.error(str(error))
+        raise SystemExit(1) from None
 
 
-if __name__ == "__main__":
-    app()
+def run():
+    app.meta()

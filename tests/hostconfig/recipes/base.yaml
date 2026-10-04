@@ -1,17 +1,35 @@
 recipes:
   default:
-    - package: [vi, nano]
+    tasks:
+      - package:
+          name: [ vi, nano ]
 
   zsh:
-    - package: [zsh]
-
-    - repo:
-        url: https://github.com/ohmyzsh/ohmyzsh.git
-        dest: "$home$/oh-my-zsh"
-
-    - file:
-        src: files/zshrc
-        dest: "$home$/.zshrc"
+    tasks:
+      - package:
+          name: [ zsh ]
+      - repo:
+          url: https://github.com/ohmyzsh/ohmyzsh.git
+          dest: "{{host.home}}/oh-my-zsh"
+      - file:
+          src: files/zshrc
+          dest: "{{host.home}}/.zshrc"
 
   git:
-    - package: [git]
+    tasks:
+      - package:
+          name: [ git ]
+
+  hyprland:
+    vars:
+      with_hyprlock: false
+      hyprland_config_dir: "files/hyprland/{{ host.hostname }}"
+    tasks:
+      - package:
+          name: [ hyprland ]
+      - package:
+          name: [ hyprlock ]
+          when: "{{recipe.with_hyprlock == true}}"
+      - dir:
+          src: "{{recipe.hyprland_config_dir}}"
+          dest: "{{host.home}}/.config/hyprland"
