@@ -40,7 +40,6 @@ Task = PackageTask | RepoTask | FileTask | DirTask
 
 
 def _parse_task(data: Any) -> Task:
-    print(data)
     if not isinstance(data, dict) or len(data) != 1:
         raise ValueError("Each task must contain exactly one task type")
 

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+from phs.inventory.loader import InventoryLoader
 from phs.output import Output
 from phs.settings import Settings
 
@@ -8,3 +9,4 @@ from phs.settings import Settings
 class AppContext:
     output: Output
     settings: Settings
+    inventory_loader: InventoryLoader

@@ -8,6 +8,7 @@ from rich.console import Console
 from phs.commands.install import install
 from phs.commands.test import test
 from phs.context import AppContext
+from phs.inventory.loader import InventoryLoader
 from phs.output import RichOutput
 from phs.settings import Settings
 
@@ -40,9 +41,10 @@ def main(
         sshkey=settings.sshkey.expanduser(),
     )
 
+    inventory_loader = InventoryLoader(settings.config_dir)
+
     context = AppContext(
-        output=RichOutput(console),
-        settings=settings,
+        output=RichOutput(console), settings=settings, inventory_loader=inventory_loader
     )
 
     command, bound, ignored = app.parse_args(tokens)

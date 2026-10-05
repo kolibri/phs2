@@ -9,3 +9,4 @@ from cyclopts import Parameter
 class Settings:
     config_dir: Path = Path(Path.home() / ".phs" / "hosts")
     sshkey: Path = Path.home() / ".ssh" / "id_ed25519"
+    dry_run: bool = False

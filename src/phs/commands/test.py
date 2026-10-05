@@ -11,11 +11,16 @@ from phs.inventory.recipe import RecipeCollection, load_recipes
 
 
 def test(
+    hostname: str,
     *,
     context: Annotated[AppContext, Parameter(parse=False)],
 ):
     print("Hello world")
 
+    inventory = context.inventory_loader.load(hostname)
+    # print(inventory)
+
+    """
     host_file = load_host("tests/hostconfig/hosts/hojo.ko.yaml")
 
     recipes = load_recipes(
@@ -68,3 +73,4 @@ def test(
     )
     result = c.run("uname -s")
     print(result.stdout)
+    """

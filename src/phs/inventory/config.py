@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -51,7 +52,7 @@ class HostFile(BaseModel):
     recipes: dict[str, Recipe] = Field(default_factory=dict)
 
 
-def load_host(path: str) -> HostFile:
+def load_host(path: Path) -> HostFile:
     with open(path, "r", encoding="utf-8") as file:
         data = yaml.safe_load(file)
 

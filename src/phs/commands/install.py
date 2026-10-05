@@ -4,6 +4,7 @@ from typing import Annotated
 from cyclopts import Parameter
 
 from phs.context import AppContext
+from phs.execution.factory import ConnectionFactory
 
 
 def install(
@@ -13,28 +14,13 @@ def install(
     force: bool = False,
     context: Annotated[AppContext, Parameter(parse=False)],
 ):
-    host_data = context.inventory.get_host(hostname)
-    host_config = host_data.config
-    disk_names = [disk.device for disk in host_config.disks]
-    base_packages = [
-        "base",
-        "linux",
-        "linux-firmware",
-        "base-devel",
-        "dialog",
-        "openssh",
-        "rsync",
-        "zsh",
-        "git",
-        "python",
-    ]
-    base_packages.extend(host_config.base_packages)
-    if host_config.microcode_package is not None:
-        base_packages.append(host_config.microcode_package)
+    inventory = context.inventory_loader.load(hostname)
+
+    disk_names = [disk.device for disk in inventory.host.disks]
 
     if not force:
         context.output.warning(
-            f"This will ERASE the disks {', '.join(disk_names)} on {host_data.hostname}."
+            f"This will ERASE the disks {', '.join(disk_names)} on {inventory.host.hostname}."
         )
         answer = context.output.prompt("Continue? [yes/N] ").strip().lower()
         if answer != "yes":
@@ -42,9 +28,15 @@ def install(
             return
 
     if userpassword is None:
-        userpassword = getpass.getpass(f"Password for {host_config.username}: ")
+        userpassword = getpass.getpass(f"Password for {inventory.host.username}: ")
         confirmation = getpass.getpass("Confirm password: ")
 
         if userpassword != confirmation:
             context.output.error("Passwords do not match.")
             return
+
+    con = ConnectionFactory(inventory.host, context.settings)
+    target = con.ssh("root")
+
+    result = target.run("echo 'Hello World'")
+    print(result.stdout)
