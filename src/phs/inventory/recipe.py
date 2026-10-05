@@ -36,33 +36,52 @@ class DirTask(TaskBase):
     dest: str
 
 
-class Task(BaseModel):
-    package: PackageTask | None = None
-    repo: RepoTask | None = None
-    file: FileTask | None = None
-    dir: DirTask | None = None
+Task = PackageTask | RepoTask | FileTask | DirTask
 
-    @model_validator(mode="after")
-    def exactly_one_task(self) -> "Task":
-        values = [
-            self.package,
-            self.repo,
-            self.file,
-            self.dir,
-        ]
 
-        if sum(value is not None for value in values) != 1:
-            raise ValueError(
-                "A task must contain exactly one of: package, repo, file, dir"
-            )
+def _parse_task(data: Any) -> Task:
+    print(data)
+    if not isinstance(data, dict) or len(data) != 1:
+        raise ValueError("Each task must contain exactly one task type")
 
-        return self
+    task_type, task_data = next(iter(data.items()))
+
+    if task_data is None:
+        task_data = {}
+
+    if not isinstance(task_data, dict):
+        raise TypeError(f"Task '{task_type}' must contain a mapping")
+
+    task_classes = {
+        "package": PackageTask,
+        "repo": RepoTask,
+        "file": FileTask,
+        "dir": DirTask,
+    }
+
+    try:
+        task_class = task_classes[task_type]
+    except KeyError:
+        raise ValueError(f"Unknown task type '{task_type}'") from None
+
+    return task_class.model_validate(task_data)
 
 
 class Recipe(BaseModel):
     name: str | None = None
     vars: dict[str, Any] = Field(default_factory=dict)
     tasks: list[Task] = Field(default_factory=list)
+
+    @field_validator("tasks", mode="before")
+    @classmethod
+    def parse_tasks(cls, value: Any) -> list[Task]:
+        if value is None:
+            return []
+
+        if not isinstance(value, list):
+            raise TypeError("Recipe tasks must be a list")
+
+        return [_parse_task(task) for task in value]
 
     def variables(
         self,
@@ -84,6 +103,13 @@ class RecipeInvocation(BaseModel):
 class RecipeFile(BaseModel):
     recipes: dict[str, Recipe]
 
+    @model_validator(mode="after")
+    def set_recipe_names(self) -> RecipeFile:
+        for name, recipe in self.recipes.items():
+            recipe.name = name
+
+        return self
+
 
 class RecipeCollection(BaseModel):
     recipes: dict[str, Recipe] = Field(default_factory=dict)
@@ -94,6 +120,7 @@ class RecipeCollection(BaseModel):
         for name, recipe in other.recipes.items():
             if name in recipes:
                 raise ValueError(f"Duplicate recipe '{name}'")
+
             recipes[name] = recipe
 
         return RecipeCollection(recipes=recipes)
@@ -105,7 +132,9 @@ class RecipeCollection(BaseModel):
             raise ValueError(f"Recipe '{name}' does not exist") from None
 
 
-def load_recipe_file(path: str | Path) -> dict[str, Recipe]:
+def load_recipe_file(
+    path: str | Path,
+) -> dict[str, Recipe]:
     path = Path(path)
 
     with path.open("r", encoding="utf-8") as file:
@@ -113,10 +142,7 @@ def load_recipe_file(path: str | Path) -> dict[str, Recipe]:
 
     recipe_file = RecipeFile.model_validate(data)
 
-    return {
-        name: recipe.model_copy(update={"name": name})
-        for name, recipe in recipe_file.recipes.items()
-    }
+    return recipe_file.recipes
 
 
 def load_recipes(

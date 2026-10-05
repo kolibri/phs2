@@ -23,7 +23,7 @@ class TemplateRenderer:
             autoescape=False,
         )
 
-    def render(
+    def _render(
         self,
         value: Any,
         *,
@@ -42,19 +42,48 @@ class TemplateRenderer:
 
         return context.render(value)
 
-    def render_model(
+    def render_host(
         self,
-        model: BaseModel,
+        model: HostConfig,
         *,
-        host: Any,
-        facts: Any,
-        recipe: Any = None,
-    ) -> BaseModel:
-        return self.render(
+        host: HostConfig,
+        facts: Facts,
+    ) -> HostConfig:
+        return self._render(
             model,
             host=host,
             facts=facts,
-            recipe=recipe,
+        )
+
+    def render_recipe(
+        self,
+        recipe: Recipe,
+        invocation: RecipeInvocation,
+        *,
+        host: HostConfig,
+        facts: Facts,
+    ) -> Recipe:
+        variables = recipe.variables(invocation.variables)
+
+        rendered_vars = self._render(
+            variables,
+            host=host,
+            facts=facts,
+            recipe=variables,
+        )
+
+        rendered_tasks = self._render(
+            recipe.tasks,
+            host=host,
+            facts=facts,
+            recipe=rendered_vars,
+        )
+
+        return recipe.model_copy(
+            update={
+                "vars": rendered_vars,
+                "tasks": rendered_tasks,
+            }
         )
 
 
@@ -85,9 +114,12 @@ class _RenderContext:
             return self.render_string(value)
 
         if isinstance(value, BaseModel):
-            data = {key: self.render(item) for key, item in value.model_dump().items()}
+            data = {
+                field_name: self.render(field_value)
+                for field_name, field_value in value.__dict__.items()
+            }
 
-            return value.__class__.model_validate(data)
+            return value.model_copy(update=data)
 
         if isinstance(value, list):
             return [self.render(item) for item in value]
@@ -145,7 +177,7 @@ class _TemplateValue:
                 raise AttributeError(name) from None
 
         else:
-            raise AttributeError(name)
+            raise TypeError(name)
 
         return self.context.resolve(
             value,
@@ -154,35 +186,3 @@ class _TemplateValue:
 
     def __getitem__(self, name: str) -> Any:
         return self.__getattr__(name)
-
-
-def render_recipe(
-    recipe: Recipe,
-    invocation: RecipeInvocation,
-    renderer: TemplateRenderer,
-    *,
-    host: HostConfig,
-    facts: Facts,
-) -> Recipe:
-    variables = recipe.variables(invocation.variables)
-
-    rendered_vars = renderer.render(
-        variables,
-        host=host,
-        facts=facts,
-        recipe=variables,
-    )
-
-    rendered_tasks = renderer.render(
-        recipe.tasks,
-        host=host,
-        facts=facts,
-        recipe=rendered_vars,
-    )
-
-    return recipe.model_copy(
-        update={
-            "vars": rendered_vars,
-            "tasks": rendered_tasks,
-        }
-    )

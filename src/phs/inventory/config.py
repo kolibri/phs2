@@ -1,7 +1,7 @@
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from phs.inventory.recipe import Recipe
 
