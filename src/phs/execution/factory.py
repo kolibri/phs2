@@ -3,7 +3,13 @@ from pathlib import Path
 from fabric import Connection
 
 from phs.execution.connection import connect
-from phs.execution.target import ArchRootTarget, DryRunTarget, RemoteTarget, Target
+from phs.execution.target import (
+    ArchRootTarget,
+    DryRunTarget,
+    LocalTarget,
+    RemoteTarget,
+    Target,
+)
 from phs.inventory.config import HostConfig
 from phs.settings import Settings
 
@@ -38,6 +44,9 @@ class ConnectionFactory:
 
     def arch_chroot(self, username: str | None = None, mount_point: str = "/mnt"):
         return ArchRootTarget(self.ssh(username), mount_point)
+
+    def local(self):
+        return LocalTarget()
 
     def _connection(self, username: str | None = None) -> Connection:
         if username is None:

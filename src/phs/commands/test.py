@@ -1,13 +1,8 @@
 from typing import Annotated
 
 from cyclopts import Parameter
-from fabric import Connection
 
 from phs.context import AppContext
-from phs.inventory.config import load_host
-from phs.inventory.config_renderer import TemplateRenderer
-from phs.inventory.facts import Facts, OsFacts
-from phs.inventory.recipe import RecipeCollection, load_recipes
 
 
 def test(

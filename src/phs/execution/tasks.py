@@ -83,9 +83,7 @@ class FileTask:
             current = None
             old = []
         else:
-            raise RuntimeError(
-                f"Could not read {self.path}: {result.stderr.strip()}"
-            )
+            raise RuntimeError(f"Could not read {self.path}: {result.stderr.strip()}")
 
         desired = self.content
         if desired and not desired.endswith("\n"):

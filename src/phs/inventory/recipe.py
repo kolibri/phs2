@@ -4,76 +4,17 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-
-class TaskBase(BaseModel):
-    when: str | bool | None = None
-
-
-class PackageTask(TaskBase):
-    name: list[str]
-
-    @field_validator("name", mode="before")
-    @classmethod
-    def normalize_name(cls, value: str | list[str]) -> list[str]:
-        if isinstance(value, str):
-            return [value]
-
-        return value
-
-
-class RepoTask(TaskBase):
-    url: str
-    dest: str
-
-
-class FileTask(TaskBase):
-    src: str
-    dest: str
-
-
-class DirTask(TaskBase):
-    src: str
-    dest: str
-
-
-Task = PackageTask | RepoTask | FileTask | DirTask
-
-
-def _parse_task(data: Any) -> Task:
-    if not isinstance(data, dict) or len(data) != 1:
-        raise ValueError("Each task must contain exactly one task type")
-
-    task_type, task_data = next(iter(data.items()))
-
-    if task_data is None:
-        task_data = {}
-
-    if not isinstance(task_data, dict):
-        raise TypeError(f"Task '{task_type}' must contain a mapping")
-
-    task_classes = {
-        "package": PackageTask,
-        "repo": RepoTask,
-        "file": FileTask,
-        "dir": DirTask,
-    }
-
-    try:
-        task_class = task_classes[task_type]
-    except KeyError:
-        raise ValueError(f"Unknown task type '{task_type}'") from None
-
-    return task_class.model_validate(task_data)
+from phs.inventory.tasks import BaseTaskConfig, _parse_task
 
 
 class Recipe(BaseModel):
     name: str | None = None
     vars: dict[str, Any] = Field(default_factory=dict)
-    tasks: list[Task] = Field(default_factory=list)
+    tasks: list[BaseTaskConfig] = Field(default_factory=list)
 
     @field_validator("tasks", mode="before")
     @classmethod
-    def parse_tasks(cls, value: Any) -> list[Task]:
+    def parse_tasks(cls, value: Any) -> list[BaseTaskConfig]:
         if value is None:
             return []
 

@@ -1,4 +1,5 @@
 import shlex
+import subprocess
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -18,7 +19,6 @@ class Target(Protocol):
         command: str,
         *,
         sudo: bool = False,
-        mutate: bool = False,
     ) -> CommandResult: ...
 
 
@@ -31,10 +31,7 @@ class RemoteTarget:
         command: str,
         *,
         sudo: bool = False,
-        mutate: bool = False,
     ) -> CommandResult:
-        del mutate
-
         if sudo:
             result = self.connection.sudo(command, warn=True)
         else:
@@ -56,15 +53,7 @@ class DryRunTarget:
         command: str,
         *,
         sudo: bool = False,
-        mutate: bool = False,
     ) -> CommandResult:
-        if not mutate:
-            return self.target.run(
-                command,
-                sudo=sudo,
-                mutate=False,
-            )
-
         prefix = "sudo " if sudo else ""
         print(f"[dry-run] would execute: {prefix}{command}")
         return CommandResult(stdout="", stderr="", returncode=0)
@@ -80,7 +69,6 @@ class ArchRootTarget:
         command: str,
         *,
         sudo: bool = False,
-        mutate: bool = False,
     ) -> CommandResult:
         del sudo
 
@@ -91,5 +79,39 @@ class ArchRootTarget:
         return self.target.run(
             chroot_command,
             sudo=True,
-            mutate=mutate,
+        )
+
+
+class LocalTarget:
+    def run(
+        self,
+        command: str,
+        *,
+        sudo: bool = False,
+    ) -> CommandResult:
+        if sudo:
+            argv = [
+                "sudo",
+                "/bin/sh",
+                "-c",
+                command,
+            ]
+        else:
+            argv = [
+                "/bin/sh",
+                "-c",
+                command,
+            ]
+
+        result = subprocess.run(
+            argv,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        return CommandResult(
+            stdout=result.stdout,
+            stderr=result.stderr,
+            returncode=result.returncode,
         )

@@ -25,32 +25,48 @@ class FakeTarget:
 
         if command.startswith("pacman -Q -- "):
             package = command.removeprefix("pacman -Q -- ").strip("'\"")
-            return type("Result", (), {
-                "stdout": "",
-                "stderr": "",
-                "returncode": 0 if package in self.installed else 1,
-            })()
+            return type(
+                "Result",
+                (),
+                {
+                    "stdout": "",
+                    "stderr": "",
+                    "returncode": 0 if package in self.installed else 1,
+                },
+            )()
 
         if command.startswith("cat -- "):
             path = command.removeprefix("cat -- ").strip("'\"")
             if path not in self.files:
-                return type("Result", (), {
-                    "stdout": "",
-                    "stderr": "",
-                    "returncode": 1,
-                })()
+                return type(
+                    "Result",
+                    (),
+                    {
+                        "stdout": "",
+                        "stderr": "",
+                        "returncode": 1,
+                    },
+                )()
 
-            return type("Result", (), {
-                "stdout": self.files[path],
+            return type(
+                "Result",
+                (),
+                {
+                    "stdout": self.files[path],
+                    "stderr": "",
+                    "returncode": 0,
+                },
+            )()
+
+        return type(
+            "Result",
+            (),
+            {
+                "stdout": "",
                 "stderr": "",
                 "returncode": 0,
-            })()
-
-        return type("Result", (), {
-            "stdout": "",
-            "stderr": "",
-            "returncode": 0,
-        })()
+            },
+        )()
 
 
 def test_package_task_reports_missing_packages(capsys):
