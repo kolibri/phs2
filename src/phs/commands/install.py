@@ -6,8 +6,8 @@ from cyclopts import Parameter
 from phs.context import AppContext
 from phs.execution.factory import ConnectionFactory
 from phs.inventory.tasks import CommandTaskConfig
-from phs.tasks.base import TaskRunner
 from phs.tasks.command import CommandTask
+from phs.tasks.runner import RunMode, TaskRunner
 
 
 def install(
@@ -41,9 +41,9 @@ def install(
     con = ConnectionFactory(inventory.host, context.settings)
     target = con.ssh("root")
 
-    runner = TaskRunner(target)
+    runner = TaskRunner(target, context.output, RunMode.NO_CONFIRM)
 
     cmdc = CommandTaskConfig(cmd="echo 'Hello World'")
     ct = CommandTask(data=cmdc)
 
-    runner.run(ct, context.output)
+    runner.run(ct)

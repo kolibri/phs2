@@ -55,8 +55,12 @@ class DryRunTarget:
         sudo: bool = False,
     ) -> CommandResult:
         prefix = "sudo " if sudo else ""
-        print(f"[dry-run] would execute: {prefix}{command}")
-        return CommandResult(stdout="", stderr="", returncode=0)
+
+        return CommandResult(
+            stdout=f"[dry-run] would execute: {prefix}{command}",
+            stderr="",
+            returncode=0,
+        )
 
 
 class ArchRootTarget:

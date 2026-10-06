@@ -1,3 +1,4 @@
+"""
 import base64
 import difflib
 import shlex
@@ -111,3 +112,4 @@ class FileTask:
             sudo=self.sudo,
             mutate=True,
         )
+"""
