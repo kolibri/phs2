@@ -1,4 +1,3 @@
-import logging
 from dataclasses import replace
 from typing import Annotated
 
@@ -41,7 +40,7 @@ def main(
         sshkey=settings.sshkey.expanduser(),
     )
 
-    inventory_loader = InventoryLoader(settings.config_dir)
+    inventory_loader = InventoryLoader(settings.config_dir, settings)
 
     context = AppContext(
         output=RichOutput(console), settings=settings, inventory_loader=inventory_loader

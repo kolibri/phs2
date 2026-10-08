@@ -43,7 +43,17 @@ def install(
 
     runner = TaskRunner(target, context.output, RunMode.NO_CONFIRM)
 
-    cmdc = CommandTaskConfig(cmd="echo 'Hello World'")
-    ct = CommandTask(data=cmdc)
+    commands = []
+    commands.append(
+        CommandTask(data=CommandTaskConfig(cmd="timedatectl set-ntp true'"))
+    )
 
-    runner.run(ct)
+    for disk in inventory.host.bootstrap.disks:
+        commands.append(
+            CommandTask(data=CommandTaskConfig(cmd=f"sgdisk --zap-all {disk.device}"))
+            for partition in disk.partitions:
+                CommandTask(data=CommandTaskConfig(cmd=f"sgdisk --zap-all {disk.device}")))
+
+
+    for command in commands:
+        runner.run(command)

@@ -5,27 +5,28 @@ host:
   connection:
     host: 127.0.0.1
     port: 2202
-  microcode:
-    package: intel-ucode
-    initrd: /intel-ucode.img
-  base_packages: [ uv ]
-  disks:
-    - device: /dev/nvme0n1
-      table: gpt
-      partitions:
-        - name: efi
-          size: 1G
-          filesystem: fat32
-          mount: /boot/efi
+  bootstrap:
+    microcode:
+      package: intel-ucode
+      initrd: /intel-ucode.img
+    base_packages: [ uv ]
+    disks:
+      - device: /dev/nvme0n1
+        table: gpt
+        partitions:
+          - name: efi
+            size: 1G
+            filesystem: fat32
+            mount: /boot/efi
 
-        - name: swap
-          size: 16G
-          type: swap
+          - name: swap
+            size: 16G
+            type: swap
 
-        - name: root
-          size: remaining
-          filesystem: ext4
-          mount: /
+          - name: root
+            size: remaining
+            filesystem: ext4
+            mount: /
 
   recipes:
     - default: ~

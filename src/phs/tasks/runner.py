@@ -1,6 +1,6 @@
 from enum import Enum
 
-from phs.execution import Target
+from phs.execution.target import Target
 from phs.output import Output
 from phs.tasks.base import BaseTask, TaskExecutionError
 

@@ -1,21 +1,25 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from phs.execution.factory import ConnectionFactory
 from phs.inventory.config import HostConfig, load_host
 from phs.inventory.config_renderer import TemplateRenderer
-from phs.inventory.facts import Facts, OsFacts
+from phs.inventory.facts import Facts, collect_facts
 from phs.inventory.recipe import Recipe, RecipeCollection, load_recipes
+from phs.settings import Settings
 
 
 @dataclass
 class Inventory:
     host: HostConfig
     recipes: dict[str, Recipe]
+    facts: Facts
 
 
 class InventoryLoader:
-    def __init__(self, config_path: Path):
+    def __init__(self, config_path: Path, settings: Settings):
         self.config_path = config_path
+        self.settings = settings
 
     def load(self, hostname: str) -> Inventory:
         host_filename = self.config_path / "hosts" / f"{hostname}.yaml"
@@ -30,7 +34,8 @@ class InventoryLoader:
         recipe_collection = recipe_collection.merge(
             RecipeCollection(recipes=host_file.recipes)
         )
-        facts = Facts(os=OsFacts(id="arch", version="rolling"))
+        target = ConnectionFactory(host_file.host, self.settings).ssh()
+        facts = collect_facts(target)
 
         renderer = TemplateRenderer()
 
@@ -49,4 +54,5 @@ class InventoryLoader:
                 )
                 for invocation in host_file.host.recipes
             },
+            facts=facts,
         )

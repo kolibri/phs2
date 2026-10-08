@@ -1,6 +1,7 @@
 import shlex
 import subprocess
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Protocol
 
 from fabric import Connection
@@ -20,6 +21,8 @@ class Target(Protocol):
         *,
         sudo: bool = False,
     ) -> CommandResult: ...
+
+    def resolve_path(self, path: str | Path) -> Path: ...
 
 
 class RemoteTarget:
@@ -43,6 +46,9 @@ class RemoteTarget:
             returncode=result.exited,
         )
 
+    def resolve_path(self, path: str | Path) -> Path:
+        return Path(path)
+
 
 class DryRunTarget:
     def __init__(self, target: Target) -> None:
@@ -61,6 +67,8 @@ class DryRunTarget:
             stderr="",
             returncode=0,
         )
+    def resolve_path(self, path: str | Path) -> Path:
+        return Path(path)
 
 
 class ArchRootTarget:
@@ -84,6 +92,8 @@ class ArchRootTarget:
             chroot_command,
             sudo=True,
         )
+    def resolve_path(self, path: str | Path) -> Path:
+        return Path(self.root) / path
 
 
 class LocalTarget:
@@ -119,3 +129,6 @@ class LocalTarget:
             stderr=result.stderr,
             returncode=result.returncode,
         )
+
+    def resolve_path(self, path: str | Path) -> Path:
+        return Path(path)

@@ -36,14 +36,18 @@ class RecipeInvocation(BaseModel):
     variables: dict[str, Any] = Field(default_factory=dict)
 
 
+class BootstrapConfig(BaseModel):
+    microcode: MicrocodeConfig | None = None
+    base_packages: list[str] = Field(default_factory=list)
+    disks: list[DiskConfig] = Field(default_factory=list)
+
+
 class HostConfig(BaseModel):
     hostname: str
     username: str
     home: str | None = None
     connection: ConnectionConfig
-    microcode: MicrocodeConfig | None = None
-    base_packages: list[str] = Field(default_factory=list)
-    disks: list[DiskConfig] = Field(default_factory=list)
+    bootstrap: BootstrapConfig
     recipes: list[RecipeInvocation] = Field(default_factory=list)
 
 
